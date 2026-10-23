@@ -5,18 +5,18 @@
  */
 package first.robot;
 
-import org.wpilib.drive.DifferentialDrive;
-import org.wpilib.framework.OpModeRobot;
-import org.wpilib.hardware.bus.CANPort;
-import org.wpilib.hardware.imu.OnboardIMU;
-import org.wpilib.hardware.imu.OnboardIMU.MountOrientation;
-
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import first.robot.simulation.DrivetrainSim;
+import org.wpilib.drive.DifferentialDrive;
+import org.wpilib.framework.OpModeRobot;
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.hardware.imu.OnboardIMU;
+import org.wpilib.hardware.imu.OnboardIMU.MountOrientation;
 
 /**
  * The methods in this class are called automatically as described in the OpModeRobot documentation.
@@ -36,25 +36,31 @@ public class Robot extends OpModeRobot {
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
-
   public final DifferentialDrive drivetrain =
-    new DifferentialDrive(leftLeader::setThrottle, rightLeader::setThrottle);
+      new DifferentialDrive(leftLeader::setThrottle, rightLeader::setThrottle);
+
+  private final DrivetrainSim drivetrainSim = new DrivetrainSim(leftLeader, rightLeader);
   private final OnboardIMU imu = new OnboardIMU(MountOrientation.FLAT);
 
   public Robot() {
-    TalonFXConfiguration leftConfig = new TalonFXConfiguration(); //config template creation!
-    leftConfig.MotorOutput.withInverted(InvertedValue.Clockwise_Positive); //config template setup
-    leftLeader.getConfigurator().apply(leftConfig); //applying configs...
+    TalonFXConfiguration leftConfig = new TalonFXConfiguration(); // config template creation!
+    leftConfig.MotorOutput.withInverted(InvertedValue.Clockwise_Positive); // config template setup
+    leftLeader.getConfigurator().apply(leftConfig); // applying configs...
     leftFollower.getConfigurator().apply(leftConfig);
-    leftFollower.setControl(new Follower(leftLeader.getDeviceID(), MotorAlignmentValue.Aligned)); //makes leftFollower motor a follower
-    
+    leftFollower.setControl(
+        new Follower(
+            leftLeader.getDeviceID(),
+            MotorAlignmentValue.Aligned)); // makes leftFollower motor a follower
+
     TalonFXConfiguration rightConfig = new TalonFXConfiguration();
     rightConfig.MotorOutput.withInverted(InvertedValue.CounterClockwise_Positive);
     rightLeader.getConfigurator().apply(rightConfig);
     rightFollower.getConfigurator().apply(rightConfig);
     rightFollower.setControl(new Follower(rightLeader.getDeviceID(), MotorAlignmentValue.Aligned));
   }
-  
+
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    drivetrainSim.periodic();
+  }
 }
